@@ -160,7 +160,7 @@ Semaforo                                                                        
 010F 7901              159             MOV R1, #1 ; Indicar que está no estado Verde
 0111 7B00              160             MOV R3, #0 ; Inicializa o contador de carros
 0113 75A0FE            161             MOV P2, #11111110b ;Ligar o led verde
-0116 0191              162             JMP SETE        ;Jump para iniciar a contagem de sete segundos do Estado Verde
+0116 0170              162             JMP DEZ ;Jump para iniciar a contagem de dez segundos do Estado Verde
 0118 BB0507            163             CJNE R3, #5, AMARELO ; Se o número de carros não tiver alcançado 5 continua pro amarelo
                        164
 011B 7B00              165             MOV R3, #0 ;Zera o contador de carros

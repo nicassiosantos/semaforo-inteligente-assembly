@@ -37,6 +37,7 @@ EMERGENCIA:
 	JMP QUINZE ;Jump para começar a contagem 
 
 BOTAO:
+	MOV IE, #00000111b
 	INC R3
 	RETI
 
@@ -163,8 +164,7 @@ VERDE:
 	CJNE R3, #5, AMARELO ; Se o número de carros não tiver alcançado 5 continua pro amarelo
 
 	MOV R3, #0 ;Zera o contador de carros
-	JMP CINCO ; Aumenta duração do sinal verde
-	JMP AMARELO ; Vai para o estado amarelo
+	JMP QUINZE ; Aumenta duração do sinal verde
 
 AMARELO: 
 	MOV R1, #2 ;Indicar que está no estado Amarelo 

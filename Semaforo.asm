@@ -16,7 +16,7 @@
 ; R1 = Registrador para identificar qual estado está para retornar (1= Verde, 2=Amarelo, 3=Vermelho)
 ; R2 = Registrador para indicar flag estado de Emergência (0 = Sem Emergência, 1 = Com Emergência)
 ; R3 = Registrador para guardar a contagem de carros passando pelo sinal verde 
-;
+; R4 = Registrador para indicar flag de que ja ocorreu o Verde+, (0 = Não ocorreu, 1 = Ocorreu) 
 
 TIMERSEC:
     	MOV TH0, #11111110b   ; Recarrega TH0 com 0x3C (parte alta de 15536)
@@ -37,6 +37,7 @@ EMERGENCIA:
 	JMP QUINZE ;Jump para começar a contagem 
 
 BOTAO:
+	MOV IE, #00000111b
 	INC R3
 	RETI
 
@@ -158,13 +159,22 @@ INICIO:
 VERDE:
 	MOV R1, #1 ; Indicar que está no estado Verde
 	MOV R3, #0 ; Inicializa o contador de carros
+	MOV R4, #0 ; Inicializa a flag de verde+ em 0
 	MOV P2, #11111110b ;Ligar o led verde
 	JMP DEZ	;Jump para iniciar a contagem de dez segundos do Estado Verde
-	CJNE R3, #5, AMARELO ; Se o número de carros não tiver alcançado 5 continua pro amarelo
 
+	CLR C ; LIMPA O CARRY
+	MOV A, R3 ; MOV R3 PARA A
+	SUBB A, #6 ; subtrai 6 do valor
+	JNC VERDE_MAIS ;se o carry não estiver setado, C=0, quer dizer que contador > 5
+	
 	MOV R3, #0 ;Zera o contador de carros
-	JMP CINCO ; Aumenta duração do sinal verde
-	JMP AMARELO ; Vai para o estado amarelo
+	JMP AMARELO
+
+VERDE_MAIS:
+	MOV R4, #1
+	MOV R3, #0 ;Zera o contador de carros
+	JMP QUINZW
 
 AMARELO: 
 	MOV R1, #2 ;Indicar que está no estado Amarelo 
