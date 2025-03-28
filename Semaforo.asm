@@ -7,8 +7,9 @@
 	JMP EMERGENCIA ;Jump para a rotina de interrupção externa do INT0
 	ORG 000Bh      ; Endereço da interrupção do Timer 0
 	JMP TIMERSEC   ; Jump para a rotina de interrupção do Timer 0
-	ORG 0013h ;Endereço da interrupção INT0, que ocorre no pino 3.2
+	ORG 0013h ;Endereço da interrupção INT1, que ocorre no pino 3.1
 	JMP BOTAO
+	
 ; -------------------------------------------
 
 ; R0 = registrador utilizado para contar quando bater um segundo
@@ -134,30 +135,31 @@ ZERO:
 	 MOV P0, #11000000b ; Exibe "0" no display
 	 CJNE R0, #1, ZERO ; Espera R0 atingir 20
 	 MOV R0, #0         ; Zera R0
-	 CJNE R2, #0, ESTADO_ANTERIOR ; Caso uma emergência tenha occorido, ele volta para o estado anterior
+	 CJNE R2, #0, PROXIMO_ESTADO ; Caso uma emergência tenha occorido, ele volta para o estado anterior
 	 JMP AMARELO   ; Vai para o estado AMARELO
 
-ESTADO_ANTERIOR: 
+PROXIMO_ESTADO: 
 	MOV R2, #0 ;Zerando a flag de emergência 
 	CJNE R1, #1, AMARELO_ANTERIOR; Caso não seja estado Verde Verifica se é amarelo 
 	JMP VERDE ;Caso seja vermelho Volta para o estado Inicial de Vermelho 
 AMARELO_ANTERIOR: 
 	CJNE R1, #2, VERDE ;Caso não seja estado Amarelo, é o estado Verde 
-	JMP AMARELO ;Vai para o estado Amarelo
+	JMP VERMELHO ;Vai para o estado Amarelo
 
 INICIO:
-    MOV IE, #10000011b ; Habilita interrupções (EA) 
+	MOV IE, #10000111b ; Habilita interrupções (EA) 
    			; interrupção do Timer 0 (ET0), interrupção externa (INT0)
-    MOV TH0, #11111110b     ; Configura TH0 com 0x3C (parte alta de 15536)
-    MOV TL0, #00111111b    ; Configura TL0 com 0xB0 (parte baixa de 15536)
-    MOV TMOD, #00000001b ; Configura o Timer 0 no Modo 1 (16 bits)
-    MOV TCON, #00010001b ; Liga o Timer 0 (TR0 = 1), habilita interrupção externa por borda no INT0
+	MOV IP, #00000101b ;Configura a prioridade do INT0 e INT1 acima do TIMER1
+	MOV TH0, #11111110b     ; Configura TH0 com 0x3C (parte alta de 15536)
+	MOV TL0, #00111111b    ; Configura TL0 com 0xB0 (parte baixa de 15536)
+	MOV TMOD, #00000001b ; Configura o Timer 0 no Modo 1 (16 bits)
+	MOV TCON, #00010101b ; Liga o Timer 0 (TR0 = 1), habilita interrupção externa por borda no INT0 e INT1
 
 VERDE:
 	MOV R1, #1 ; Indicar que está no estado Verde
 	MOV R3, #0 ; Inicializa o contador de carros
 	MOV P2, #11111110b ;Ligar o led verde
-	JMP SETE	;Jump para iniciar a contagem de sete segundos do Estado Verde
+	JMP DEZ	;Jump para iniciar a contagem de dez segundos do Estado Verde
 	CJNE R3, #5, AMARELO ; Se o número de carros não tiver alcançado 5 continua pro amarelo
 
 	MOV R3, #0 ;Zera o contador de carros
@@ -168,5 +170,7 @@ AMARELO:
 	MOV R1, #2 ;Indicar que está no estado Amarelo 
 	MOV P2 , #11111101b ; Ligar o led amarelo
 	JMP TRES  ;Jump para Iniciar a contagem do Estado Amarelo
+
+VERMELHO:
 
 END
