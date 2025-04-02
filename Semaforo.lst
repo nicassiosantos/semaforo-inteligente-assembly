@@ -1,257 +1,290 @@
 Semaforo                                                                                                                PAGE 1
-                         1     ORG 0          ; Endereço da primeira instrução
-0000 2105                2         AJMP INICIO     ; Jump para o início do código
+                         1         ORG 0          ; Endereço da primeira instrução
+0000 211F                2         AJMP INICIO     ; Jump para o início do código
                          3
                          4     ; -------- ROTINAS DE INTERRUPÇÃO -----------
                          5         ORG 0003h       ; Endereço da interrupção INT0 (pino 3.2)
-0003 020057              6         JMP EMERGENCIA  ; Rotina de emergência
+0003 02006F              6         JMP EMERGENCIA  ; Rotina de emergência
                          7         ORG 000Bh       ; Endereço da interrupção do Timer 0
-000B 02000E              8         JMP TIMERSEC    ; Rotina do timer
-                         9
-                        10     ; -------------------------------------------
-                        11
-                        12     ; Variáveis:
-                        13     ; R0 = Contador de segundos
-                        14     ; R1 = Estado atual (1=Verde, 2=Amarelo, 3=Vermelho)
-                        15     ; R2 = Controle de emergência (0=normal, 1=emergência ativa)
-                        16     ; R3 = Estado salvo antes da emergência
-                        17     ; R4 = Contador de emergência (15s)
-                        18
-                        19     TIMERSEC:
-000E 75A803             20         MOV IE, #00000011b  ; Desabilita interrupções
-0011 758CFF             21         MOV TH0, #11111111b      ; Recarrega timer
-0014 758AC0             22         MOV TL0, #11000000b
-0017 C28D               23         CLR TF0
-                        24
-0019 BA011F             25         CJNE R2, #1, CONTADOR_NORMAL  ; Se não está em emergência
-                        26
-                        27         ; Lógica de contagem de emergência
-001C DC35               28         DJNZ R4, FIM_TIMER            ; Decrementa contador de emergência
-001E 7A00               29         MOV R2, #0                    ; Finaliza emergência
-                        30
-                        31         ; Restaura estado anterior com contagem completa
-0020 EB                 32         MOV A, R3
-0021 F9                 33         MOV R1, A                    ; Restaura estado anterior
-                        34
-                        35         ; Configura contagem inicial conforme estado
-0022 BB0104             36         CJNE R3, #1, CHECK_AMARELO_RESTORE
-                        37         ; Estado Verde
-0025 780A               38         MOV R0, #10                   ; 15 segundos
-0027 802A               39         SJMP FIM_TIMER
-                        40
-                        41     CHECK_AMARELO_RESTORE:
-0029 BB0104             42         CJNE R3, #1, VERDE_RESTORE
-                        43         ; Estado Verde
-002C 780A               44         MOV R0, #10                    ; 10 segundos
-002E 8023               45         SJMP FIM_TIMER
-                        46
-                        47     VERDE_RESTORE:
-0030 BB0204             48         CJNE R3, #2, VERMELHO_RESTORE
-                        49         ; Estado Amarelo (volta com 3s)
-0033 7803               50         MOV R0, #3                   ;  3 segundos
-0035 801C               51         SJMP FIM_TIMER
-                        52
-                        53     VERMELHO_RESTORE:
-                        54         ; Estado Vermelho
-0037 7807               55         MOV R0, #7                   ; 15 segundos
-0039 8018               56         SJMP FIM_TIMER
+000B 020026              8         JMP TIMERSEC    ; Rotina do timer
+                         9         ORG 0013h       ; Endereço da interrupção INT1 (pino 3.3)
+0013 020016             10         JMP BOTAO        ; Rotina da contagem de veiculos
+                        11     ; -------------------------------------------
+                        12
+                        13     ; Variáveis:
+                        14     ; R0 = Contador de segundos
+                        15     ; R1 = Estado atual (1=Verde, 2=Amarelo, 3=Vermelho)
+                        16     ; R2 = Controle de emergência (0=normal, 1=emergência ativa)
+                        17     ; R3 = Estado salvo antes da emergência
+                        18     ; R4 = Contador de emergência (15s)
+                        19     ; R5 = R3 = Indicar a flag de verde mais
+                        20     ; R6 = R2 = Indicar número de veiculos
+                        21
+                        22     BOTAO:
+0016 0E                 23         INC R6 ;incrementa o contador de veículos
+0017 EE                 24         MOV     A, R6      ; Move o valor de R6 ara o acumulador
+0018 C3                 25         CLR     C           ; Limpa o carry antes da subtração
+0019 9406               26         SUBB    A, #6       ; Subtrai 6 do valor (pois se for maior que 5, A será >=0 após SUBB #6)
+001B 4008               27         JC      MENOR_IGUAL ; Se carry=1, significa que R0 < 6 (ou seja, R0 <=5)
+                        28        ; Se chegou aqui, R6 > 5
+001D BD0005             29         CJNE R5, #0,  MENOR_IGUAL ;Segue o fluxo normal com a flag ativada
+0020 7D01               30         MOV R5, #1 ;Ativa flag de aumento de tempo do sinal verde
+0022 780F               31         MOV     R0, #15 ; Seta os segundos para 15
+0024 32                 32         RETI
+                        33     MENOR_IGUAL:
+0025 32                 34         RETI
+                        35
+                        36     TIMERSEC:
+0026 75A803             37         MOV IE, #00000011b  ; Desabilita interrupções
+0029 758CFF             38         MOV TH0, #11111111b      ; Recarrega timer
+002C 758AC0             39         MOV TL0, #11000000b
+002F C28D               40         CLR TF0
+                        41
+0031 BA011F             42         CJNE R2, #1, CONTADOR_NORMAL  ; Se não está em emergência
+                        43
+                        44         ; Lógica de contagem de emergência
+0034 DC35               45         DJNZ R4, FIM_TIMER            ; Decrementa contador de emergência
+0036 7A00               46         MOV R2, #0                    ; Finaliza emergência
+                        47
+                        48         ; Restaura estado anterior com contagem completa
+0038 EB                 49         MOV A, R3
+0039 F9                 50         MOV R1, A                    ; Restaura estado anterior
+                        51
+                        52         ; Configura contagem inicial conforme estado
+003A BB0104             53         CJNE R3, #1, CHECK_AMARELO_RESTORE
+                        54         ; Estado Verde
+003D 780A               55         MOV R0, #10                   ; 15 segundos
+003F 802A               56         SJMP FIM_TIMER
                         57
-                        58     CONTADOR_NORMAL:
-003B D816               59         DJNZ R0, FIM_TIMER            ; Decrementa contador normal
-                        60
-                        61         ; Transição de estados normais
-003D B90106             62         CJNE R1, #1, CHECK_AMARELO
-                        63         ; Verde -> Amarelo
-0040 7902               64         MOV R1, #2
-0042 7803               65         MOV R0, #3
-0044 800D               66         SJMP FIM_TIMER
-                        67
-                        68     CHECK_AMARELO:
-0046 B90206             69         CJNE R1, #2, CHECK_VERMELHO
-                        70         ; Amarelo -> Vermelho
-0049 7903               71         MOV R1, #3
-004B 7807               72         MOV R0, #7
-004D 8004               73         SJMP FIM_TIMER
+                        58     CHECK_AMARELO_RESTORE:
+0041 BB0104             59         CJNE R3, #1, VERDE_RESTORE
+                        60         ; Estado Verde
+0044 780A               61         MOV R0, #10                    ; 10 segundos
+0046 8023               62         SJMP FIM_TIMER
+                        63
+                        64     VERDE_RESTORE:
+0048 BB0204             65         CJNE R3, #2, VERMELHO_RESTORE
+                        66         ; Estado Amarelo (volta com 3s)
+004B 7803               67         MOV R0, #3                   ;  3 segundos
+004D 801C               68         SJMP FIM_TIMER
+                        69
+                        70     VERMELHO_RESTORE:
+                        71         ; Estado Vermelho
+004F 7807               72         MOV R0, #7                   ; 15 segundos
+0051 8018               73         SJMP FIM_TIMER
                         74
-                        75     CHECK_VERMELHO:
-                        76         ; Vermelho -> Verde
-004F 7901               77         MOV R1, #1
-0051 780A               78         MOV R0, #10
-                        79
-                        80     FIM_TIMER:
-0053 75A883             81         MOV IE, #10000011b  ; Reabilita interrupções
-0056 32                 82         RETI
-                        83
-                        84     EMERGENCIA:
-0057 7A01               85         MOV R2, #1          ; Ativa emergência
-0059 E9                 86         MOV A, R1
-005A FB                 87         MOV R3, A          ; Salva estado atual
-005B 7C0F               88         MOV R4, #15         ; Configura 15s de emergência
-005D 75A0FB             89         MOV P2, #11111011b  ; Acende vermelho
-0060 32                 90         RETI
+                        75     CONTADOR_NORMAL:
+0053 D816               76         DJNZ R0, FIM_TIMER            ; Decrementa contador normal
+                        77
+                        78         ; Transição de estados normais
+0055 B90106             79         CJNE R1, #1, CHECK_AMARELO
+                        80         ; Verde -> Amarelo
+0058 7902               81         MOV R1, #2
+005A 7803               82         MOV R0, #3
+005C 800D               83         SJMP FIM_TIMER
+                        84
+                        85     CHECK_AMARELO:
+005E B90206             86         CJNE R1, #2, CHECK_VERMELHO
+                        87         ; Amarelo -> Vermelho
+0061 7903               88         MOV R1, #3
+0063 7807               89         MOV R0, #7
+0065 8004               90         SJMP FIM_TIMER
                         91
-                        92     ; Rotina para exibir contagem no display
-                        93     ATUALIZA_DISPLAY:
-                        94         ; Verifica se está em modo de emergência
-0061 BA0103             95         CJNE R2, #1, MODO_NORMAL
+                        92     CHECK_VERMELHO:
+                        93         ; Vermelho -> Verde
+0067 7901               94         MOV R1, #1
+0069 780A               95         MOV R0, #10
                         96
-                        97         ; MODO EMERGÊNCIA - usa R4 como contador
-0064 EC                 98         MOV A, R4
-0065 8001               99         SJMP EXIBE_NUMERO
+                        97     FIM_TIMER:
+006B 75A883             98         MOV IE, #10000011b  ; Reabilita interrupções
+006E 32                 99         RETI
                        100
-                       101     MODO_NORMAL:
-                       102         ; MODO NORMAL - usa R0 como contador
-0067 E8                103         MOV A, R0
-                       104
-                       105     EXIBE_NUMERO:
-                       106         ; A partir deste ponto, a lógica é a mesma para ambos os modos
-                       107         ; O valor a ser exibido está no acumulador (A)
-                       108
-0068 B40F07            109         CJNE A, #15, DISP_14
-006B 7590F9            110         MOV P1, #11111001b ; Exibe "1"
-006E 758092            111         MOV P0, #10010010b ; Exibe "5"
-0071 22                112         RET
-                       113
-                       114     DISP_14:
-0072 B40E07            115         CJNE A, #14, DISP_13
-0075 7590F9            116         MOV P1, #11111001b ; "1"
-0078 758099            117         MOV P0, #10011001b ; "4"
-007B 22                118         RET
-                       119
-                       120     DISP_13:
-007C B40D07            121         CJNE A, #13, DISP_12
-007F 7590F9            122         MOV P1, #11111001b ; "1"
-0082 7580B0            123         MOV P0, #10110000b ; "3"
-0085 22                124         RET
-                       125
-                       126     DISP_12:
-0086 B40C07            127         CJNE A, #12, DISP_11
-0089 7590F9            128         MOV P1, #11111001b ; "1"
-008C 7580A4            129         MOV P0, #10100100b ; "2"
-008F 22                130         RET
+                       101     EMERGENCIA:
+006F 7A01              102         MOV R2, #1          ; Ativa emergência
+0071 E9                103         MOV A, R1
+0072 FB                104         MOV R3, A          ; Salva estado atual
+0073 7C0F              105         MOV R4, #15         ; Configura 15s de emergência
+0075 7D00              106         MOV R5, #0          ;Zera flag de passagem de veículos
+0077 75A0FB            107         MOV P2, #11111011b  ; Acende vermelho
+007A 32                108         RETI
+                       109
+                       110     ; Rotina para exibir contagem no display
+                       111     ATUALIZA_DISPLAY:
+                       112         ; Verifica se está em modo de emergência
+007B BA0103            113         CJNE R2, #1, MODO_NORMAL
+                       114
+                       115         ; MODO EMERGÊNCIA - usa R4 como contador
+007E EC                116         MOV A, R4
+007F 8001              117         SJMP EXIBE_NUMERO
+                       118
+                       119     MODO_NORMAL:
+                       120         ; MODO NORMAL - usa R0 como contador
+0081 E8                121         MOV A, R0
+                       122
+                       123     EXIBE_NUMERO:
+                       124         ; A partir deste ponto, a lógica é a mesma para ambos os modos
+                       125         ; O valor a ser exibido está no acumulador (A)
+                       126
+0082 B40F07            127         CJNE A, #15, DISP_14
+0085 7590F9            128         MOV P1, #11111001b ; Exibe "1"
+0088 758092            129         MOV P0, #10010010b ; Exibe "5"
+008B 22                130         RET
                        131
-                       132     DISP_11:
-0090 B40B07            133         CJNE A, #11, DISP_10
-0093 7590F9            134         MOV P1, #11111001b ; "1"
-0096 7580F9            135         MOV P0, #11111001b ; "1"
-0099 22                136         RET
+                       132     DISP_14:
+008C B40E07            133         CJNE A, #14, DISP_13
+008F 7590F9            134         MOV P1, #11111001b ; "1"
+0092 758099            135         MOV P0, #10011001b ; "4"
+0095 22                136         RET
                        137
-                       138     DISP_10:
-009A B40A07            139         CJNE A, #10, DISP_9
-009D 7590F9            140         MOV P1, #11111001b ; "1"
-00A0 7580C0            141         MOV P0, #11000000b ; "0"
-00A3 22                142         RET
+                       138     DISP_13:
+0096 B40D07            139         CJNE A, #13, DISP_12
+0099 7590F9            140         MOV P1, #11111001b ; "1"
+009C 7580B0            141         MOV P0, #10110000b ; "3"
+009F 22                142         RET
                        143
-                       144     DISP_9:
-00A4 B40907            145         CJNE A, #9, DISP_8
-00A7 7590C0            146         MOV P1, #11000000b ; "0"
-00AA 758090            147         MOV P0, #10010000b ; "9"
-00AD 22                148         RET
+                       144     DISP_12:
+00A0 B40C07            145         CJNE A, #12, DISP_11
+00A3 7590F9            146         MOV P1, #11111001b ; "1"
+00A6 7580A4            147         MOV P0, #10100100b ; "2"
+00A9 22                148         RET
                        149
-                       150     DISP_8:
-00AE B40807            151         CJNE A, #8, DISP_7
-00B1 7590C0            152         MOV P1, #11000000b ; "0"
-00B4 758080            153         MOV P0, #10000000b ; "8"
-00B7 22                154         RET
+                       150     DISP_11:
+00AA B40B07            151         CJNE A, #11, DISP_10
+00AD 7590F9            152         MOV P1, #11111001b ; "1"
+00B0 7580F9            153         MOV P0, #11111001b ; "1"
+00B3 22                154         RET
                        155
-                       156     DISP_7:
-00B8 B40707            157         CJNE A, #7, DISP_6
-00BB 7590C0            158         MOV P1, #11000000b ; "0"
-00BE 7580F8            159         MOV P0, #11111000b ; "7"
-00C1 22                160         RET
+                       156     DISP_10:
+00B4 B40A07            157         CJNE A, #10, DISP_9
+00B7 7590F9            158         MOV P1, #11111001b ; "1"
+00BA 7580C0            159         MOV P0, #11000000b ; "0"
+00BD 22                160         RET
                        161
-                       162     DISP_6:
-00C2 B40607            163         CJNE A, #6, DISP_5
-00C5 7590C0            164         MOV P1, #11000000b ; "0"
-00C8 758082            165         MOV P0, #10000010b ; "6"
-00CB 22                166         RET
+                       162     DISP_9:
+00BE B40907            163         CJNE A, #9, DISP_8
+00C1 7590C0            164         MOV P1, #11000000b ; "0"
+00C4 758090            165         MOV P0, #10010000b ; "9"
+00C7 22                166         RET
                        167
-                       168     DISP_5:
-00CC B40507            169         CJNE A, #5, DISP_4
-00CF 7590C0            170         MOV P1, #11000000b ; "0"
-00D2 758092            171         MOV P0, #10010010b ; "5"
-00D5 22                172         RET
+                       168     DISP_8:
+00C8 B40807            169         CJNE A, #8, DISP_7
+00CB 7590C0            170         MOV P1, #11000000b ; "0"
+00CE 758080            171         MOV P0, #10000000b ; "8"
+00D1 22                172         RET
                        173
-                       174     DISP_4:
-00D6 B40407            175         CJNE A, #4, DISP_3
-00D9 7590C0            176         MOV P1, #11000000b ; "0"
-00DC 758099            177         MOV P0, #10011001b ; "4"
-00DF 22                178         RET
+                       174     DISP_7:
+00D2 B40707            175         CJNE A, #7, DISP_6
+00D5 7590C0            176         MOV P1, #11000000b ; "0"
+00D8 7580F8            177         MOV P0, #11111000b ; "7"
+00DB 22                178         RET
                        179
-                       180     DISP_3:
-00E0 B40307            181         CJNE A, #3, DISP_2
-00E3 7590C0            182         MOV P1, #11000000b ; Exibe "0" no display
-00E6 7580B0            183         MOV P0, #10110000b ; Exibe "3" no display
-00E9 22                184         RET
+                       180     DISP_6:
+00DC B40607            181         CJNE A, #6, DISP_5
+00DF 7590C0            182         MOV P1, #11000000b ; "0"
+00E2 758082            183         MOV P0, #10000010b ; "6"
+00E5 22                184         RET
                        185
-                       186     DISP_2:
-00EA B40207            187         CJNE A, #2, DISP_1
-00ED 7590C0            188         MOV P1, #11000000b ; Exibe "0" no display
-00F0 7580A4            189         MOV P0, #10100100b ; Exibe "2" no display
-00F3 22                190         RET
+                       186     DISP_5:
+00E6 B40507            187         CJNE A, #5, DISP_4
+00E9 7590C0            188         MOV P1, #11000000b ; "0"
+00EC 758092            189         MOV P0, #10010010b ; "5"
+00EF 22                190         RET
                        191
-                       192     DISP_1:
-00F4 B40107            193         CJNE A, #1, DISP_0
-00F7 7590C0            194         MOV P1, #11000000b ; Exibe "0" no display
-00FA 7580F9            195         MOV P0, #11111001b ; Exibe "1" no display
-00FD 22                196         RET
+                       192     DISP_4:
+00F0 B40407            193         CJNE A, #4, DISP_3
+00F3 7590C0            194         MOV P1, #11000000b ; "0"
+00F6 758099            195         MOV P0, #10011001b ; "4"
+00F9 22                196         RET
                        197
-                       198     DISP_0:
-00FE 7590C0            199         MOV P1, #11000000b ; "0"
-0101 7580C0            200         MOV P0, #11000000b ; "0"
-0104 22                201         RET
-                       202
-                       203     ; Rotina principal
-                       204     INICIO:
-0105 75A883            205         MOV IE, #10000011b  ; Habilita interrupções
-0108 758901            206         MOV TMOD, #00000001b ; Timer modo 1
-010B 758CFF            207         MOV TH0, #11111111b       ; Valor inicial do timer
-010E 758AC0            208         MOV TL0, #11000000b
-0111 758811            209         MOV TCON, #00010001b ; Configura timer e INT0
-                       210
-                       211         ; Estado inicial
-0114 7901              212         MOV R1, #1          ; Verde
-0116 780A              213         MOV R0, #10         ; 10 segundos
-0118 7A00              214         MOV R2, #0          ; Sem emergência
-011A 75A0FE            215         MOV P2, #11111110b  ; Acende verde
-                       216
-                       217     MAIN_LOOP:
-011D 120061            218         LCALL ATUALIZA_DISPLAY
-                       219
-                       220         ; O resto do código permanece igual
-0120 BA0111            221         CJNE R2, #1, LEDS_NORMAIS
-                       222         ; Modo emergência - vermelho constante
-0123 75A0FB            223         MOV P2, #11111011b
-0126 80F5              224         SJMP MAIN_LOOP
-                       225
-                       226     MOSTRA_NORMAL:
-0128 E8                227         MOV A, R0
-0129 120061            228         LCALL ATUALIZA_DISPLAY
+                       198     DISP_3:
+00FA B40307            199         CJNE A, #3, DISP_2
+00FD 7590C0            200         MOV P1, #11000000b ; Exibe "0" no display
+0100 7580B0            201         MOV P0, #10110000b ; Exibe "3" no display
+0103 22                202         RET
+                       203
+                       204     DISP_2:
+0104 B40207            205         CJNE A, #2, DISP_1
+0107 7590C0            206         MOV P1, #11000000b ; Exibe "0" no display
+010A 7580A4            207         MOV P0, #10100100b ; Exibe "2" no display
+010D 22                208         RET
+                       209
+                       210     DISP_1:
+010E B40107            211         CJNE A, #1, DISP_0
+0111 7590C0            212         MOV P1, #11000000b ; Exibe "0" no display
+0114 7580F9            213         MOV P0, #11111001b ; Exibe "1" no display
+0117 22                214         RET
+                       215
+                       216     DISP_0:
+0118 7590C0            217         MOV P1, #11000000b ; "0"
+011B 7580C0            218         MOV P0, #11000000b ; "0"
+011E 22                219         RET
+                       220
+                       221     ; Rotina principal
+                       222     INICIO:
+011F 75A883            223         MOV IE, #10000011b  ; Habilita interrupções INT0, TIMER0
+0122 758901            224         MOV TMOD, #00000001b ; Timer modo 1
+0125 758CFF            225         MOV TH0, #11111111b       ; Valor inicial do timer
+0128 758AC0            226         MOV TL0, #11000000b ;
+012B 75B805            227         MOV IP, #00000101b; Configura prioridade de INT0 e INT1 acima de TIMER0
+012E 758815            228         MOV TCON, #00010101b ; Habilita interrupção externa do INT0 e do INT1 e liga o TIMER0
                        229
-                       230     CONTROLA_LEDS:
-012C BA0105            231         CJNE R2, #1, LEDS_NORMAIS
-                       232         ; Modo emergência - vermelho constante
-012F 75A0FB            233         MOV P2, #11111011b
-0132 80E9              234         SJMP MAIN_LOOP
+                       230         ; Estado inicial
+0131 7901              231         MOV R1, #1          ; Verde
+0133 780A              232         MOV R0, #10         ; 10 segundos
+0135 7A00              233         MOV R2, #0          ; Sem emergência
+0137 75A0FE            234         MOV P2, #11111110b  ; Acende verde
                        235
-                       236     LEDS_NORMAIS:
-0134 B90105            237         CJNE R1, #1, CHECK_AMARELO_LED
-                       238         ; Verde
-0137 75A0FE            239         MOV P2, #11111110b
-013A 80E1              240         SJMP MAIN_LOOP
-                       241
-                       242     CHECK_AMARELO_LED:
-013C B90205            243         CJNE R1, #2, VERMELHO_LED
-                       244         ; Amarelo
-013F 75A0FD            245         MOV P2, #11111101b
-0142 80D9              246         SJMP MAIN_LOOP
-                       247
-                       248     VERMELHO_LED:
-                       249         ; Vermelho
-0144 75A0FB            250         MOV P2, #11111011b
-0147 80D4              251         SJMP MAIN_LOOP
-                       252
-                       253     END
+                       236     MAIN_LOOP:
+013A 12007B            237         LCALL ATUALIZA_DISPLAY
+                       238
+                       239         ; O resto do código permanece igual
+013D BA0111            240         CJNE R2, #1, LEDS_NORMAIS
+                       241         ; Modo emergência - vermelho constante
+0140 75A0FB            242         MOV P2, #11111011b
+0143 80F5              243         SJMP MAIN_LOOP
+                       244
+                       245     MOSTRA_NORMAL:
+0145 E8                246         MOV A, R0
+0146 12007B            247         LCALL ATUALIZA_DISPLAY
+                       248
+                       249     CONTROLA_LEDS:
+0149 BA0105            250         CJNE R2, #1, LEDS_NORMAIS
+                       251         ; Modo emergência - vermelho constante
+014C 75A0FB            252         MOV P2, #11111011b
+014F 80E9              253         SJMP MAIN_LOOP
+                       254
+                       255     LEDS_NORMAIS:
+0151 B90117            256         CJNE R1, #1, CHECK_AMARELO_LED
+                       257         ; Verde
+0154 75A887            258         MOV IE, #10000111b ;Habilita a interrupção do INT1
+0157 75A0FE            259         MOV P2, #11111110b ; Liga o led Verde
+015A EE                260         MOV     A, R6      ; Move o valor de R6 ara o acumulador
+015B C3                261         CLR     C           ; Limpa o carry antes da subtração
+015C 9406              262         SUBB    A, #6       ; Subtrai 6 do valor (pois se for maior que 5, A será >=0 após SUBB #6)
+015E 4009              263         JC      MENOR_IGUAL_ ; Se carry=1, significa que R0 < 6 (ou seja, R0 <=5)
+                       264        ; Se chegou aqui, R6 > 5
+0160 BD0006            265         CJNE R5, #0,  MENOR_IGUAL_ ;Segue o fluxo normal com a flag ativada
+0163 7D01              266         MOV R5, #1 ;Ativa flag de aumento de tempo do sinal verde
+0165 780F              267         MOV     R0, #15 ; Seta os segundos para 15
+0167 80D1              268         SJMP MAIN_LOOP
+                       269     MENOR_IGUAL_:
+0169 80CF              270         SJMP MAIN_LOOP
+                       271
+                       272     CHECK_AMARELO_LED:
+016B 75A883            273         MOV IE, #10000011b ;Desabilita a interrupção do INT1
+016E 7E00              274         MOV R6, #0 ;Zera quantidade de veículos que passou
+0170 7D00              275         MOV R5, #0 ;Zera flag de quantidade passagem de veículos
+0172 B90205            276         CJNE R1, #2, VERMELHO_LED
+                       277         ; Amarelo
+0175 75A0FD            278         MOV P2, #11111101b
+0178 80C0              279         SJMP MAIN_LOOP
+                       280
+                       281     VERMELHO_LED:
+                       282         ; Vermelho
+017A 75A0FB            283         MOV P2, #11111011b
+017D 80BB              284         SJMP MAIN_LOOP
+                       285
+                       286     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
 
@@ -266,12 +299,13 @@ ADCLK. . . . . . . . . . . . . . . .  D  ADDR  00F2H  NOT USED
 ADCON. . . . . . . . . . . . . . . .  D  ADDR  00F3H  NOT USED
 ADDH . . . . . . . . . . . . . . . .  D  ADDR  00F5H  NOT USED
 ADDL . . . . . . . . . . . . . . . .  D  ADDR  00F4H  NOT USED
-ATUALIZA_DISPLAY . . . . . . . . . .  C  ADDR  0061H
+ATUALIZA_DISPLAY . . . . . . . . . .  C  ADDR  007BH
 AUXR . . . . . . . . . . . . . . . .  D  ADDR  008EH  NOT USED
 AUXR1. . . . . . . . . . . . . . . .  D  ADDR  00A2H  NOT USED
 B. . . . . . . . . . . . . . . . . .  D  ADDR  00F0H  NOT USED
 BDRCON . . . . . . . . . . . . . . .  D  ADDR  009BH  NOT USED
 BDRCON_1 . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
+BOTAO. . . . . . . . . . . . . . . .  C  ADDR  0016H
 BRL. . . . . . . . . . . . . . . . .  D  ADDR  009AH  NOT USED
 CCAP0H . . . . . . . . . . . . . . .  D  ADDR  00FAH  NOT USED
 CCAP0L . . . . . . . . . . . . . . .  D  ADDR  00EAH  NOT USED
@@ -299,10 +333,10 @@ CCF4 . . . . . . . . . . . . . . . .  B  ADDR  00DCH  NOT USED
 CCON . . . . . . . . . . . . . . . .  D  ADDR  00D8H  NOT USED
 CFINT. . . . . . . . . . . . . . . .  C  ADDR  0033H  NOT USED
 CH . . . . . . . . . . . . . . . . .  D  ADDR  00F9H  NOT USED
-CHECK_AMARELO. . . . . . . . . . . .  C  ADDR  0046H
-CHECK_AMARELO_LED. . . . . . . . . .  C  ADDR  013CH
-CHECK_AMARELO_RESTORE. . . . . . . .  C  ADDR  0029H
-CHECK_VERMELHO . . . . . . . . . . .  C  ADDR  004FH
+CHECK_AMARELO. . . . . . . . . . . .  C  ADDR  005EH
+CHECK_AMARELO_LED. . . . . . . . . .  C  ADDR  016BH
+CHECK_AMARELO_RESTORE. . . . . . . .  C  ADDR  0041H
+CHECK_VERMELHO . . . . . . . . . . .  C  ADDR  0067H
 CKCON. . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
 CKCON0 . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
 CKRL . . . . . . . . . . . . . . . .  D  ADDR  0097H  NOT USED
@@ -310,27 +344,27 @@ CKSEL. . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
 CL . . . . . . . . . . . . . . . . .  D  ADDR  00E9H  NOT USED
 CLKREG . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
 CMOD . . . . . . . . . . . . . . . .  D  ADDR  00D9H  NOT USED
-CONTADOR_NORMAL. . . . . . . . . . .  C  ADDR  003BH
-CONTROLA_LEDS. . . . . . . . . . . .  C  ADDR  012CH  NOT USED
+CONTADOR_NORMAL. . . . . . . . . . .  C  ADDR  0053H
+CONTROLA_LEDS. . . . . . . . . . . .  C  ADDR  0149H  NOT USED
 CPRL2. . . . . . . . . . . . . . . .  B  ADDR  00C8H  NOT USED
 CR . . . . . . . . . . . . . . . . .  B  ADDR  00DEH  NOT USED
 CT2. . . . . . . . . . . . . . . . .  B  ADDR  00C9H  NOT USED
 CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H  NOT USED
-DISP_0 . . . . . . . . . . . . . . .  C  ADDR  00FEH
-DISP_1 . . . . . . . . . . . . . . .  C  ADDR  00F4H
-DISP_10. . . . . . . . . . . . . . .  C  ADDR  009AH
-DISP_11. . . . . . . . . . . . . . .  C  ADDR  0090H
-DISP_12. . . . . . . . . . . . . . .  C  ADDR  0086H
-DISP_13. . . . . . . . . . . . . . .  C  ADDR  007CH
-DISP_14. . . . . . . . . . . . . . .  C  ADDR  0072H
-DISP_2 . . . . . . . . . . . . . . .  C  ADDR  00EAH
-DISP_3 . . . . . . . . . . . . . . .  C  ADDR  00E0H
-DISP_4 . . . . . . . . . . . . . . .  C  ADDR  00D6H
-DISP_5 . . . . . . . . . . . . . . .  C  ADDR  00CCH
-DISP_6 . . . . . . . . . . . . . . .  C  ADDR  00C2H
-DISP_7 . . . . . . . . . . . . . . .  C  ADDR  00B8H
-DISP_8 . . . . . . . . . . . . . . .  C  ADDR  00AEH
-DISP_9 . . . . . . . . . . . . . . .  C  ADDR  00A4H
+DISP_0 . . . . . . . . . . . . . . .  C  ADDR  0118H
+DISP_1 . . . . . . . . . . . . . . .  C  ADDR  010EH
+DISP_10. . . . . . . . . . . . . . .  C  ADDR  00B4H
+DISP_11. . . . . . . . . . . . . . .  C  ADDR  00AAH
+DISP_12. . . . . . . . . . . . . . .  C  ADDR  00A0H
+DISP_13. . . . . . . . . . . . . . .  C  ADDR  0096H
+DISP_14. . . . . . . . . . . . . . .  C  ADDR  008CH
+DISP_2 . . . . . . . . . . . . . . .  C  ADDR  0104H
+DISP_3 . . . . . . . . . . . . . . .  C  ADDR  00FAH
+DISP_4 . . . . . . . . . . . . . . .  C  ADDR  00F0H
+DISP_5 . . . . . . . . . . . . . . .  C  ADDR  00E6H
+DISP_6 . . . . . . . . . . . . . . .  C  ADDR  00DCH
+DISP_7 . . . . . . . . . . . . . . .  C  ADDR  00D2H
+DISP_8 . . . . . . . . . . . . . . .  C  ADDR  00C8H
+DISP_9 . . . . . . . . . . . . . . .  C  ADDR  00BEH
 DP0H . . . . . . . . . . . . . . . .  D  ADDR  0083H  NOT USED
 DP0L . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
 DP1H . . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
@@ -340,7 +374,7 @@ DPL. . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
 EA . . . . . . . . . . . . . . . . .  B  ADDR  00AFH  NOT USED
 EC . . . . . . . . . . . . . . . . .  B  ADDR  00AEH  NOT USED
 EECON. . . . . . . . . . . . . . . .  D  ADDR  0096H  NOT USED
-EMERGENCIA . . . . . . . . . . . . .  C  ADDR  0057H
+EMERGENCIA . . . . . . . . . . . . .  C  ADDR  006FH
 ES . . . . . . . . . . . . . . . . .  B  ADDR  00ACH  NOT USED
 ET0. . . . . . . . . . . . . . . . .  B  ADDR  00A9H  NOT USED
 ET1. . . . . . . . . . . . . . . . .  B  ADDR  00ABH  NOT USED
@@ -349,19 +383,19 @@ EX0. . . . . . . . . . . . . . . . .  B  ADDR  00A8H  NOT USED
 EX1. . . . . . . . . . . . . . . . .  B  ADDR  00AAH  NOT USED
 EXEN2. . . . . . . . . . . . . . . .  B  ADDR  00CBH  NOT USED
 EXF2 . . . . . . . . . . . . . . . .  B  ADDR  00CEH  NOT USED
-EXIBE_NUMERO . . . . . . . . . . . .  C  ADDR  0068H
+EXIBE_NUMERO . . . . . . . . . . . .  C  ADDR  0082H
 EXTI0. . . . . . . . . . . . . . . .  C  ADDR  0003H  NOT USED
 EXTI1. . . . . . . . . . . . . . . .  C  ADDR  0013H  NOT USED
 F0 . . . . . . . . . . . . . . . . .  B  ADDR  00D5H  NOT USED
 FE . . . . . . . . . . . . . . . . .  B  ADDR  009FH  NOT USED
-FIM_TIMER. . . . . . . . . . . . . .  C  ADDR  0053H
+FIM_TIMER. . . . . . . . . . . . . .  C  ADDR  006BH
 IE . . . . . . . . . . . . . . . . .  D  ADDR  00A8H
 IE0. . . . . . . . . . . . . . . . .  B  ADDR  0089H  NOT USED
 IE1. . . . . . . . . . . . . . . . .  B  ADDR  008BH  NOT USED
-INICIO . . . . . . . . . . . . . . .  C  ADDR  0105H
+INICIO . . . . . . . . . . . . . . .  C  ADDR  011FH
 INT0 . . . . . . . . . . . . . . . .  B  ADDR  00B2H  NOT USED
 INT1 . . . . . . . . . . . . . . . .  B  ADDR  00B3H  NOT USED
-IP . . . . . . . . . . . . . . . . .  D  ADDR  00B8H  NOT USED
+IP . . . . . . . . . . . . . . . . .  D  ADDR  00B8H
 IPH. . . . . . . . . . . . . . . . .  D  ADDR  00B7H  NOT USED
 IPH0 . . . . . . . . . . . . . . . .  D  ADDR  00B7H  NOT USED
 IPH1 . . . . . . . . . . . . . . . .  D  ADDR  00B3H  NOT USED
@@ -372,10 +406,12 @@ IT1. . . . . . . . . . . . . . . . .  B  ADDR  008AH  NOT USED
 KBE. . . . . . . . . . . . . . . . .  D  ADDR  009DH  NOT USED
 KBF. . . . . . . . . . . . . . . . .  D  ADDR  009EH  NOT USED
 KBLS . . . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
-LEDS_NORMAIS . . . . . . . . . . . .  C  ADDR  0134H
-MAIN_LOOP. . . . . . . . . . . . . .  C  ADDR  011DH
-MODO_NORMAL. . . . . . . . . . . . .  C  ADDR  0067H
-MOSTRA_NORMAL. . . . . . . . . . . .  C  ADDR  0128H  NOT USED
+LEDS_NORMAIS . . . . . . . . . . . .  C  ADDR  0151H
+MAIN_LOOP. . . . . . . . . . . . . .  C  ADDR  013AH
+MENOR_IGUAL. . . . . . . . . . . . .  C  ADDR  0025H
+MENOR_IGUAL_ . . . . . . . . . . . .  C  ADDR  0169H
+MODO_NORMAL. . . . . . . . . . . . .  C  ADDR  0081H
+MOSTRA_NORMAL. . . . . . . . . . . .  C  ADDR  0145H  NOT USED
 OSCCON . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 OV . . . . . . . . . . . . . . . . .  B  ADDR  00D2H  NOT USED
 P. . . . . . . . . . . . . . . . . .  B  ADDR  00D0H  NOT USED
@@ -454,7 +490,7 @@ TI . . . . . . . . . . . . . . . . .  B  ADDR  0099H  NOT USED
 TIMER0 . . . . . . . . . . . . . . .  C  ADDR  000BH  NOT USED
 TIMER1 . . . . . . . . . . . . . . .  C  ADDR  001BH  NOT USED
 TIMER2 . . . . . . . . . . . . . . .  C  ADDR  002BH  NOT USED
-TIMERSEC . . . . . . . . . . . . . .  C  ADDR  000EH
+TIMERSEC . . . . . . . . . . . . . .  C  ADDR  0026H
 TL0. . . . . . . . . . . . . . . . .  D  ADDR  008AH
 TL1. . . . . . . . . . . . . . . . .  D  ADDR  008BH  NOT USED
 TL2. . . . . . . . . . . . . . . . .  D  ADDR  00CCH  NOT USED
@@ -463,9 +499,9 @@ TR0. . . . . . . . . . . . . . . . .  B  ADDR  008CH  NOT USED
 TR1. . . . . . . . . . . . . . . . .  B  ADDR  008EH  NOT USED
 TR2. . . . . . . . . . . . . . . . .  B  ADDR  00CAH  NOT USED
 TXD. . . . . . . . . . . . . . . . .  B  ADDR  00B1H  NOT USED
-VERDE_RESTORE. . . . . . . . . . . .  C  ADDR  0030H
-VERMELHO_LED . . . . . . . . . . . .  C  ADDR  0144H
-VERMELHO_RESTORE . . . . . . . . . .  C  ADDR  0037H
+VERDE_RESTORE. . . . . . . . . . . .  C  ADDR  0048H
+VERMELHO_LED . . . . . . . . . . . .  C  ADDR  017AH
+VERMELHO_RESTORE . . . . . . . . . .  C  ADDR  004FH
 WDTCON . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTPRG . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTRST . . . . . . . . . . . . . . .  D  ADDR  00A6H  NOT USED

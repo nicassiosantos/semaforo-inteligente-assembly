@@ -20,7 +20,7 @@ Semaforo                                                                        
                         19     TIMERSEC:
 000E 75A803             20         MOV IE, #00000011b  ; Desabilita interrupções
 0011 758CFF             21         MOV TH0, #11111111b      ; Recarrega timer
-0014 758AE0             22         MOV TL0, #11100000b
+0014 758AC0             22         MOV TL0, #11000000b
 0017 C28D               23         CLR TF0
                         24
 0019 BA011F             25         CJNE R2, #1, CONTADOR_NORMAL  ; Se não está em emergência
@@ -36,11 +36,11 @@ Semaforo                                                                        
                         35         ; Configura contagem inicial conforme estado
 0022 BB0104             36         CJNE R3, #1, CHECK_AMARELO_RESTORE
                         37         ; Estado Verde
-0025 780F               38         MOV R0, #15                   ; 15 segundos
+0025 780A               38         MOV R0, #10                   ; 15 segundos
 0027 802A               39         SJMP FIM_TIMER
                         40
                         41     CHECK_AMARELO_RESTORE:
-0029 BB0204             42         CJNE R3, #2, VERDE_RESTORE
+0029 BB0104             42         CJNE R3, #1, VERDE_RESTORE
                         43         ; Estado Verde
 002C 780A               44         MOV R0, #10                    ; 10 segundos
 002E 8023               45         SJMP FIM_TIMER
@@ -206,7 +206,7 @@ Semaforo                                                                        
 0105 75A883            205         MOV IE, #10000011b  ; Habilita interrupções
 0108 758901            206         MOV TMOD, #00000001b ; Timer modo 1
 010B 758CFF            207         MOV TH0, #11111111b       ; Valor inicial do timer
-010E 758AE0            208         MOV TL0, #11100000b
+010E 758AC0            208         MOV TL0, #11000000b
 0111 758811            209         MOV TCON, #00010001b ; Configura timer e INT0
                        210
                        211         ; Estado inicial

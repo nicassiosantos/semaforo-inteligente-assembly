@@ -1,4 +1,4 @@
-ORG 0          ; Endereço da primeira instrução
+    ORG 0          ; Endereço da primeira instrução
     AJMP INICIO     ; Jump para o início do código
 
 ; -------- ROTINAS DE INTERRUPÇÃO ----------- 
@@ -6,7 +6,8 @@ ORG 0          ; Endereço da primeira instrução
     JMP EMERGENCIA  ; Rotina de emergência
     ORG 000Bh       ; Endereço da interrupção do Timer 0
     JMP TIMERSEC    ; Rotina do timer
-
+    ORG 0013h 	    ; Endereço da interrupção INT1 (pino 3.3)
+    JMP BOTAO        ; Rotina da contagem de veiculos
 ; -------------------------------------------
 
 ; Variáveis:
@@ -15,6 +16,22 @@ ORG 0          ; Endereço da primeira instrução
 ; R2 = Controle de emergência (0=normal, 1=emergência ativa)
 ; R3 = Estado salvo antes da emergência
 ; R4 = Contador de emergência (15s)
+; R5 = R3 = Indicar a flag de verde mais 
+; R6 = R2 = Indicar número de veiculos
+
+BOTAO: 
+    INC R6 ;incrementa o contador de veículos 
+    MOV     A, R6      ; Move o valor de R6 ara o acumulador
+    CLR     C           ; Limpa o carry antes da subtração
+    SUBB    A, #6       ; Subtrai 6 do valor (pois se for maior que 5, A será >=0 após SUBB #6)
+    JC      MENOR_IGUAL ; Se carry=1, significa que R0 < 6 (ou seja, R0 <=5)
+   ; Se chegou aqui, R6 > 5
+    CJNE R5, #0,  MENOR_IGUAL ;Segue o fluxo normal com a flag ativada
+    MOV R5, #1 ;Ativa flag de aumento de tempo do sinal verde
+    MOV     R0, #15 ; Seta os segundos para 15  
+    RETI
+MENOR_IGUAL:
+    RETI
 
 TIMERSEC:
     MOV IE, #00000011b  ; Desabilita interrupções
@@ -86,6 +103,7 @@ EMERGENCIA:
     MOV A, R1
     MOV R3, A          ; Salva estado atual
     MOV R4, #15         ; Configura 15s de emergência
+    MOV R5, #0 		;Zera flag de passagem de veículos
     MOV P2, #11111011b  ; Acende vermelho
     RETI
 
@@ -202,11 +220,12 @@ DISP_0:
 
 ; Rotina principal
 INICIO:
-    MOV IE, #10000011b  ; Habilita interrupções
+    MOV IE, #10000011b  ; Habilita interrupções INT0, TIMER0 
     MOV TMOD, #00000001b ; Timer modo 1
     MOV TH0, #11111111b       ; Valor inicial do timer
-    MOV TL0, #11000000b
-    MOV TCON, #00010001b ; Configura timer e INT0
+    MOV TL0, #11000000b ;
+    MOV IP, #00000101b; Configura prioridade de INT0 e INT1 acima de TIMER0
+    MOV TCON, #00010101b ; Habilita interrupção externa do INT0 e do INT1 e liga o TIMER0
     
     ; Estado inicial
     MOV R1, #1          ; Verde
@@ -236,10 +255,24 @@ CONTROLA_LEDS:
 LEDS_NORMAIS:
     CJNE R1, #1, CHECK_AMARELO_LED
     ; Verde
-    MOV P2, #11111110b
+    MOV IE, #10000111b ;Habilita a interrupção do INT1
+    MOV P2, #11111110b ; Liga o led Verde
+    MOV     A, R6      ; Move o valor de R6 ara o acumulador
+    CLR     C           ; Limpa o carry antes da subtração
+    SUBB    A, #6       ; Subtrai 6 do valor (pois se for maior que 5, A será >=0 após SUBB #6)
+    JC      MENOR_IGUAL_ ; Se carry=1, significa que R0 < 6 (ou seja, R0 <=5)
+   ; Se chegou aqui, R6 > 5
+    CJNE R5, #0,  MENOR_IGUAL_ ;Segue o fluxo normal com a flag ativada
+    MOV R5, #1 ;Ativa flag de aumento de tempo do sinal verde
+    MOV     R0, #15 ; Seta os segundos para 15  
+    SJMP MAIN_LOOP
+MENOR_IGUAL_:
     SJMP MAIN_LOOP
     
 CHECK_AMARELO_LED:
+    MOV IE, #10000011b ;Desabilita a interrupção do INT1
+    MOV R6, #0 ;Zera quantidade de veículos que passou
+    MOV R5, #0 ;Zera flag de quantidade passagem de veículos
     CJNE R1, #2, VERMELHO_LED
     ; Amarelo
     MOV P2, #11111101b
@@ -251,3 +284,5 @@ VERMELHO_LED:
     SJMP MAIN_LOOP
 
 END
+
+
