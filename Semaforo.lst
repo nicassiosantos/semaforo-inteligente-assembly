@@ -21,8 +21,8 @@ Semaforo                                                                        
                         20     ; R5 = Registrador para contar os segundos restantes
                         21
                         22     TIMERSEC:
-0016 758C3C             23             MOV TH0, #00111100b   ; Recarrega TH0 com 0x3C (parte alta de 15536)
-0019 758AB0             24             MOV TL0, #10110000b   ; Recarrega TL0 com 0xB0 (parte baixa de 15536)
+0016 758CFF             23             MOV TH0, #11111111b   ; Recarrega TH0 com 0x3C (parte alta de 15536)
+0019 758AC0             24             MOV TL0, #11000000b   ; Recarrega TL0 com 0xB0 (parte baixa de 15536)
 001C C28D               25             CLR TF0          ; Limpa o bit de overflow
 001E 08                 26             INC R0           ; Incrementa R0
 001F 32                 27             RETI             ; Retorna da interrupção
@@ -240,9 +240,10 @@ Semaforo                                                                        
 016A 7D0F              239             MOV R5, #15
 016C 1132              240             CALL AGUARDA_TEMPO
 016E 7B00              241             MOV R3, #00000000b
-0170 80B0              242             JMP MAIN_LOOP
-                       243
-                       244     END
+0170 7C00              242             MOV R4, #00000000b
+0172 80AE              243             JMP MAIN_LOOP
+                       244
+                       245     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
 

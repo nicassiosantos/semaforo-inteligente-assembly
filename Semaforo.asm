@@ -20,8 +20,8 @@
 ; R5 = Registrador para contar os segundos restantes
 
 TIMERSEC:
-    	MOV TH0, #00111100b   ; Recarrega TH0 com 0x3C (parte alta de 15536)
-    	MOV TL0, #10110000b   ; Recarrega TL0 com 0xB0 (parte baixa de 15536)
+    	MOV TH0, #11111111b   ; Recarrega TH0 com 0x3C (parte alta de 15536)
+    	MOV TL0, #11000000b   ; Recarrega TL0 com 0xB0 (parte baixa de 15536)
     	CLR TF0          ; Limpa o bit de overflow
     	INC R0           ; Incrementa R0
     	RETI             ; Retorna da interrupção
@@ -239,6 +239,7 @@ INICIA_EMERGENCIA:
 	MOV R5, #15
 	CALL AGUARDA_TEMPO
 	MOV R3, #00000000b
+	MOV R4, #00000000b
 	JMP MAIN_LOOP
 
 END
