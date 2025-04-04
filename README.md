@@ -44,7 +44,7 @@ Além desses citados acima, existe também dois estados extras cada um com um re
 
 ### Variáveis em Registradores
 
-A solução desenvolvida faz uso de 7 dos 8 registradores disponíveis no simulados, cada um com uma finalidade específica:
+A solução desenvolvida faz uso de 7 dos 8 registradores disponíveis no banco de memória 0 do microcontrolador, cada um com uma finalidade específica:
 
 | Registrador   | Utilidade                        | Possíveis Valores e definições         |   
 | ------------- | -------------------------------- | -------------------------------------- |
