@@ -1,4 +1,5 @@
 # TEC470 - SISTEMAS EMBARCADOS
+Problema 1 da disciplina de Sistemas Embarcados - Semáforo Inteligente.
 
 ## Introdução
 Um semáforo inteligente é um sistema de controle de tráfego que utiliza sensores, algoritmos e comuni-
