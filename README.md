@@ -77,5 +77,7 @@ O produto desenvolvido faz uso de alguns dos componentes disponívels no simulad
 ## Conclusão
 
 A partir dos requisitos do problema, os sinais Verde, Amarelo e Vermelho são ativados corretamente em ordem e com temporizador correto em ordem descrecente, a mudança de estados tanto para o fluxo normal, quanto para os estados ativados por interrupção estão conforme exigidos na descrição atendendo às características de um semáforo inteligente de sensores de fluxo de tráfego e prioridade para veículos de emergência.
+
 Para uma segunda versão, podem ser feitas algumas melhorias, o número de registradores utilizados pode ser reduzido ao usar o mesmo registrador para fazer controle do fluxo normal, estado de emergência e estado verde+, também, o código pode ser reescreito para evitar redundâncias e instruções desnecesárias.
+
 Por fim, o produto gerado, semáforo inteligente desenvolvido na linguem assembly para 8051, atende a todos os requisitos do problema.
