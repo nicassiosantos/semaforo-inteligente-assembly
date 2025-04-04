@@ -53,7 +53,7 @@ A dolução desenvolvida faz uso de 7 dos 8 registradores disponíveis no simula
 | ------------- | -------------------------------- | -------------------------------------- |
 |   R0          | Contador de segundos do Timer    | 0 - 15                                 |
 |   R1          | Estador atual                    | 1 = Verde; 2 = Amarelo; 3 = Vermelho   |
-|   R2          | Controle de Emergência           | 0 = Normal, 1 = Emergência ativa       |
+|   R2          | Controle de Emergência           | 0 = Normal; 1 = Emergência ativa       |
 |   R3          | Estado salvo antes da emergência | 1 = Verde; 2 = Amarelo; 3 = Vermelho   |
 |   R4          | Contador de emergência           | 15                                     |
 |   R5          | Indicar a flag de Verde+         | 0 = Tempo normal; 1 = Tempo aumentado  |
