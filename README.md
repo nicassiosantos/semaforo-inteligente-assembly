@@ -24,7 +24,7 @@ O problema proposto é um semáforo inteligente que deve ser desenvolvido no MCU
     - Deve ser feita a contagem de veículos através de um botão, case tenha mais de 5 veículos contados, o sinal verde deve ser estendido para 15 segundos, essa contagem não pode ser feita durante o Sinal Vermelho;
     - A prioridade de interrupções deve seguir a ordem: 1 - Botão de Emergência; 2 - Botão de contagem de carros; 3 - Timer.
 
-## Solição desenvolvida
+## Solução desenvolvida
 
 ### Diagrama geral do sistema
 
