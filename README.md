@@ -2,11 +2,7 @@
 Problema 1 da disciplina de Sistemas Embarcados - Semáforo Inteligente.
 
 ## Introdução
-Um semáforo inteligente é um sistema de controle de tráfego que utiliza sensores, algoritmos e comuni-
-cação em tempo real para otimizar o fluxo de veículos e pedestres nas vias urbanas. Diferente dos semá-
-foros tradicionais, que operam com tempos fixos, os semáforos inteligentes ajustam os tempos de sinali-
-zação com base em variáveis como intensidade do tráfego, presença de pedestres e veículos de emergên-
-cia.
+Um semáforo inteligente é um sistema de controle de tráfego que utiliza sensores, algoritmos e comunicação em tempo real para otimizar o fluxo de veículos e pedestres nas vias urbanas. Diferente dos semáforos tradicionais, que operam com tempos fixos, os semáforos inteligentes ajustam os tempos de sinalização com base em variáveis como intensidade do tráfego, presença de pedestres e veículos de emergência.
 
 As principais características de um semáforo inteligente são:
 
@@ -48,7 +44,7 @@ Além desses citados acima, existe também dois estados extras cada um com um re
 
 ### Variáveis em Registradores
 
-A dolução desenvolvida faz uso de 7 dos 8 registradores disponíveis no simulados, cada um com uma finalidade específica:
+A solução desenvolvida faz uso de 7 dos 8 registradores disponíveis no simulados, cada um com uma finalidade específica:
 
 | Registrador   | Utilidade                        | Possíveis Valores e definições         |   
 | ------------- | -------------------------------- | -------------------------------------- |
