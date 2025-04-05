@@ -36,8 +36,8 @@ MENOR_IGUAL:
 TIMERSEC:
     MOV IE, #00000011b  ; Desabilita interrupções
     MOV TH0, #11111111b      ; Recarrega timer
-    MOV TL0, #11000000b 
-    CLR TF0
+    MOV TL0, #10000000b 
+    CLR TF0		    ;limpa bit de overflow
     
     CJNE R2, #1, CONTADOR_NORMAL  ; Se não está em emergência
     
@@ -52,19 +52,13 @@ TIMERSEC:
     ; Configura contagem inicial conforme estado
     CJNE R3, #1, CHECK_AMARELO_RESTORE
     ; Estado Verde
-    MOV R0, #10                   ; 15 segundos
+    MOV R0, #10                   ; 10 segundos
     SJMP FIM_TIMER
     
 CHECK_AMARELO_RESTORE:
-    CJNE R3, #1, VERDE_RESTORE
-    ; Estado Verde
-    MOV R0, #10                    ; 10 segundos
-    SJMP FIM_TIMER
-
-VERDE_RESTORE:
     CJNE R3, #2, VERMELHO_RESTORE
-    ; Estado Amarelo (volta com 3s)
-    MOV R0, #3                   ;  3 segundos
+    ; Estado Amarelo
+    MOV R0, #3                    ; 3 segundos
     SJMP FIM_TIMER
 
 VERMELHO_RESTORE:
@@ -223,9 +217,9 @@ INICIO:
     MOV IE, #10000011b  ; Habilita interrupções INT0, TIMER0 
     MOV TMOD, #00000001b ; Timer modo 1
     MOV TH0, #11111111b       ; Valor inicial do timer
-    MOV TL0, #11000000b ;
+    MOV TL0, #10000000b ;
     MOV IP, #00000101b; Configura prioridade de INT0 e INT1 acima de TIMER0
-    MOV TCON, #00010101b ; Habilita interrupção externa do INT0 e do INT1 e liga o TIMER0
+    MOV TCON, #00010101b ; Habilita interrupção por borda do INT0 e do INT1 e liga o TIMER0
     
     ; Estado inicial
     MOV R1, #1          ; Verde
@@ -236,7 +230,7 @@ INICIO:
 MAIN_LOOP:
     LCALL ATUALIZA_DISPLAY
     
-    ; O resto do código permanece igual
+    ;Observa se a flag de emergência está ativada
     CJNE R2, #1, LEDS_NORMAIS
     ; Modo emergência - vermelho constante
     MOV P2, #11111011b
@@ -253,7 +247,7 @@ CONTROLA_LEDS:
     SJMP MAIN_LOOP
 
 LEDS_NORMAIS:
-    CJNE R1, #1, CHECK_AMARELO_LED
+    CJNE R1, #1, CHECK_AMARELO_LED ;Se não está no estado de verde pula para amarelo
     ; Verde
     MOV IE, #10000111b ;Habilita a interrupção do INT1
     MOV P2, #11111110b ; Liga o led Verde
@@ -284,5 +278,7 @@ VERMELHO_LED:
     SJMP MAIN_LOOP
 
 END
+
+
 
 
